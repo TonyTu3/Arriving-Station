@@ -1,6 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
     compileSdkVersion 26
     buildToolsVersion "26.0.2"
     defaultConfig {

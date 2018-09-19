@@ -9,5 +9,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+            //  http://lbsyun.baidu.com/index.php?title=android-locsdk/guide/create-project/android-studio
+
+
     }
 }
