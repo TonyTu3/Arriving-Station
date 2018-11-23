@@ -4,6 +4,7 @@ android {
     sourceSets {
         main {
             jniLibs.srcDirs = ['libs']
+
         }
     }
     compileSdkVersion 26
