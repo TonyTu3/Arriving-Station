@@ -2,7 +2,6 @@ package com.tyt.arrivingstation;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -37,24 +36,19 @@ import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
 import com.baidu.mapapi.search.sug.SuggestionResult;
 import com.baidu.mapapi.search.sug.SuggestionSearch;
 import com.baidu.mapapi.search.sug.SuggestionSearchOption;
-import com.baidu.mapapi.utils.CoordinateConverter;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.tyt.arrivingstation.service.LocationService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.baidu.mapapi.utils.CoordinateConverter.CoordType.BD09LL;
-
 public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResultListener, OnGetSuggestionResultListener {
     private static final String TAG = "mainactivitytag";
-    //    public LocationClient mLocationClient = null;
     private MapView mMapView;
     private BaiduMap mBaiduMap;
     private GeoCoder mSearch;
     private BDLocation curLocation;
     private BDLocation desLocation;
-    private double distance = -1;
     private LocationService locationService;
     private SuggestionSearch mSuggestionSearch;
     private ArrayAdapter<String> adapter;
@@ -91,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -156,10 +149,10 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         LatLng desLatLng = new LatLng(desLocation.getLatitude(), desLocation.getLongitude());
 
         //转换坐标
-        CoordinateConverter converter = new CoordinateConverter().from(BD09LL).coord(desLatLng);
-        LatLng desLatLng1 = converter.convert();
+//        CoordinateConverter converter = new CoordinateConverter().from(BD09LL).coord(desLatLng);
+//        LatLng desLatLng1 = converter.convert();
 
-        addPin(desLatLng1);
+        addPin(desLatLng);
         double distance = DistanceUtil.getDistance(curLatLng, desLatLng);
         Log.e(TAG, "距离: " + distance);
         return distance;
@@ -186,9 +179,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
     }
 
 
-    /**
-     * 检索位置编码
-     */
+    /** 检索位置编码*/
     private void getLongLan(String s) {
         //1.创建地理编码检索实例；
         mSearch = GeoCoder.newInstance();
@@ -199,9 +190,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         mSearch.geocode(new GeoCodeOption().city("北京").address(s));
     }
 
-    /**
-     * 位置建议
-     */
+    /**输入建议列表*/
     @Override
     public void onGetSuggestionResult(SuggestionResult suggestionResult) {
         synchronized (this) {
@@ -218,13 +207,11 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
     }
 
 
-    /**
-     * 定位结束
-     */
+    /**地址-->经纬度坐标*/
     @Override
     public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {
         if (geoCodeResult == null || geoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {//没有找到检索结果
-            Toast.makeText(this, "无法找到目的地", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "无法找到目的地经纬度", Toast.LENGTH_SHORT).show();
         } else if (geoCodeResult.getLocation() != null) {
             desLocation = new BDLocation();
             desLocation.setLatitude(geoCodeResult.getLocation().latitude);
@@ -235,13 +222,13 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         }
     }
 
+    /**逆向查询： 经纬度坐标->地址**/
     @Override
     public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
 
     }
 
     private class MyLocationListener extends BDAbstractLocationListener {
-
         @Override
         public void onReceiveLocation(BDLocation location) {
             curLocation = location;
@@ -260,31 +247,10 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         }
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
         mMapView.onResume();
-
-        new CountDownTimer(20000, 2000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-
-                /*if (curLocation != null && desLocation != null) {
-                    if (distance == -1) {
-                        distance = getDistance();
-                        Toast.makeText(MainActivity.this, "距离:" + distance, Toast.LENGTH_SHORT).show();
-                    }
-                } else if (desLocation == null) {
-//                    getLongLan("");
-                }*/
-            }
-
-            @Override
-            public void onFinish() {
-
-            }
-        }.start();
     }
 
     @Override
