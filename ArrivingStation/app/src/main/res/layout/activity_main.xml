@@ -7,14 +7,26 @@
     android:layout_height="match_parent"
     tools:context="com.tyt.arrivingstation.MainActivity">
 
+    <AutoCompleteTextView
+        android:id="@+id/auctv"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/bmapView"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:singleLine="true"
+        android:completionThreshold="1"
+        android:background="@null"
+        app:layout_constraintTop_toTopOf="parent"/>
+
     <com.baidu.mapapi.map.MapView
         android:id="@+id/bmapView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:clickable="true"/>
+        app:layout_constraintTop_toBottomOf="@+id/auctv"/>
 
 </android.support.constraint.ConstraintLayout>
