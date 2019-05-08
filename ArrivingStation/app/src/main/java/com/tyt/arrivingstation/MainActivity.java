@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         //定义Maker坐标点
 //        LatLng point = new LatLng(39.944251, 116.494996);
         //构建Marker图标
-        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.mipmap.pin1);
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.mipmap.pin2);
         //构建MarkerOption，用于在地图上添加Marker
         MarkerOptions option = new MarkerOptions()
                 .position(desLatLng) //必传参数
