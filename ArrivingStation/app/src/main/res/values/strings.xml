@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Arriving Station</string>
+    <string name="service_terminated">本次服务结束</string>
+    <string name="not_found">无法找到目的地</string>
+    <string name="distance">相距</string>
+    <string name="arriving">快到站啦!请准备下车!</string>
+    <string name="got_it">知道了</string>
+    <string name="arriving_tip_title">到站提示</string>
 </resources>
