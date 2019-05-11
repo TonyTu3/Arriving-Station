@@ -1,18 +1,28 @@
 package com.tyt.arrivingstation;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Filter;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.baidu.location.BDAbstractLocationListener;
@@ -20,9 +30,6 @@ import com.baidu.location.BDLocation;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
-import com.baidu.mapapi.map.MapStatus;
-import com.baidu.mapapi.map.MapStatusUpdate;
-import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
@@ -39,27 +46,28 @@ import com.baidu.mapapi.search.sug.OnGetSuggestionResultListener;
 import com.baidu.mapapi.search.sug.SuggestionResult;
 import com.baidu.mapapi.search.sug.SuggestionSearch;
 import com.baidu.mapapi.search.sug.SuggestionSearchOption;
-import com.baidu.mapapi.utils.CoordinateConverter;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.tyt.arrivingstation.service.LocationService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.baidu.mapapi.utils.CoordinateConverter.CoordType.GPS;
-
 public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResultListener, OnGetSuggestionResultListener {
     private static final String TAG = "mainactivitytag";
+    //    public LocationClient mLocationClient = null;
     private MapView mMapView;
     private BaiduMap mBaiduMap;
     private GeoCoder mSearch;
     private BDLocation curLocation;
     private BDLocation desLocation;
+    private double distance = -1;
     private LocationService locationService;
     private SuggestionSearch mSuggestionSearch;
     private ArrayAdapter<String> adapter;
     private ArrayList<String> countries;
     private Overlay overlay;
+    private ImageView anim;
+    private Vibrator vibrator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,8 +75,11 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         setContentView(R.layout.activity_main);
 
         mMapView = (MapView) findViewById(R.id.bmapView);
+        anim = (ImageView) findViewById(R.id.iv);
+
         mBaiduMap = mMapView.getMap();
         mBaiduMap.setMyLocationEnabled(true);
+
 
         locationService = new LocationService(this);
         locationService.registerListener(new MyLocationListener());
@@ -76,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
 
         mSuggestionSearch = SuggestionSearch.newInstance();
         mSuggestionSearch.setOnGetSuggestionResultListener(this);
+
 
         final AutoCompleteTextView auto = (AutoCompleteTextView) findViewById(R.id.auctv);
         auto.addTextChangedListener(new TextWatcher() {
@@ -88,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
 
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -96,9 +109,13 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         });
 
         auto.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int index, long arg3) {
                 getLongLan(countries.get(index) != null ? countries.get(index) : "");
+                startAnimation(anim);
+                InputMethodManager imm = (InputMethodManager) auto.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(auto.getWindowToken(), 0);
             }
         });
 
@@ -106,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         countries = new ArrayList<>();
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, countries) {
             private Filter f;
+
             @NonNull
             @Override
             public Filter getFilter() {
@@ -117,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
                             for (String adr : countries) {
                                 suggestions.add(adr);
                             }
-                            Log.d("test", countries.toString());
                             FilterResults filterResults = new FilterResults();
                             filterResults.values = suggestions;
                             filterResults.count = suggestions.size();
@@ -142,17 +159,21 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
     }
 
 
-    /**
-     * 设置中心点
-     */
-    private void setUserMapCenter(LatLng cenpt) {
-    //定义地图状态
-        MapStatus mMapStatus = new MapStatus.Builder().target(cenpt).zoom(14).build();
-    //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
-        MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
-    //改变地图状态
-        mBaiduMap.setMapStatus(mMapStatusUpdate);
+    private AnimationDrawable startAnimation(ImageView iv) {
+        AnimationDrawable drawable = (AnimationDrawable) getResources().getDrawable(R.drawable.location);
+        iv.setImageDrawable(drawable);
+        drawable.start();
+        return drawable;
+    }
 
+    public void stopAnim(View iv) {
+        if (iv != null) {
+            Drawable drawable = ((ImageView) iv).getDrawable();
+            if (drawable != null && drawable instanceof AnimationDrawable) {
+                ((AnimationDrawable) drawable).stop();
+                Toast.makeText(MainActivity.this, R.string.service_terminated, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     /**
@@ -163,13 +184,12 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
         LatLng desLatLng = new LatLng(desLocation.getLatitude(), desLocation.getLongitude());
 
         //转换坐标
-        CoordinateConverter converter = new CoordinateConverter().from(GPS).coord(desLatLng);
-        LatLng desLatLng1 = converter.convert();
+//        CoordinateConverter converter = new CoordinateConverter().from(BD09MC).coord(desLatLng);
+//        LatLng desLatLng1 = converter.convert();
 
         addPin(desLatLng);
-        double distance = DistanceUtil.getDistance(curLatLng, desLatLng1);
-        setUserMapCenter(desLatLng);
-        Log.e(TAG, "距离: " + distance);
+        double distance = DistanceUtil.getDistance(curLatLng, desLatLng);
+        Log.e(TAG, "distance--> " + distance);
         return distance;
     }
 
@@ -208,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
     }
 
     /**
-     * 输入建议列表
+     * 位置建议
      */
     @Override
     public void onGetSuggestionResult(SuggestionResult suggestionResult) {
@@ -227,35 +247,59 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
 
 
     /**
-     * 地址-->经纬度坐标
+     * 定位结束
      */
     @Override
     public void onGetGeoCodeResult(GeoCodeResult geoCodeResult) {
         if (geoCodeResult == null || geoCodeResult.error != SearchResult.ERRORNO.NO_ERROR) {//没有找到检索结果
-            Toast.makeText(this, "无法找到目的地经纬度", Toast.LENGTH_SHORT).show();
-        } else if (geoCodeResult.getLocation() != null) {
-            desLocation = new BDLocation();
-            desLocation.setLatitude(geoCodeResult.getLocation().latitude);
-            desLocation.setLongitude(geoCodeResult.getLocation().longitude);
-            double distance = getDistance();
+            Toast.makeText(this, R.string.not_found, Toast.LENGTH_SHORT).show();
+        } else {
+            if (geoCodeResult.getLocation() != null) {
+                desLocation = new BDLocation();
+                desLocation.setLatitude(geoCodeResult.getLocation().latitude);
+                desLocation.setLongitude(geoCodeResult.getLocation().longitude);
+                double distance = getDistance();
+                Toast.makeText(this, getString(R.string.distance) + (int) distance + "米", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "desLocation: " + desLocation.getLatitude() + "--" + desLocation.getLongitude());
 
-            if (distance < 1000) {
-//                LocationApplication.mVibrator.;
+                if (distance < 2000) {
+                    SystemClock.sleep(2000);
+                    startActivity(new Intent(MainActivity.this, MainActivity.class));
+                    startVbrator();
+                    showDialog();
+                }
+
             }
-            Toast.makeText(this, "相距" + (int) distance + "米", Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "desLocation: " + desLocation.getLatitude() + "--" + desLocation.getLongitude());
         }
     }
 
-    /**
-     * 逆向查询： 经纬度坐标->地址
-     **/
+    private void showDialog() {
+        AlertDialog arriving = new AlertDialog.Builder(this).setTitle(R.string.arriving_tip_title).
+                setMessage(R.string.arriving).setCancelable(true).
+                setPositiveButton(R.string.got_it, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                stopAnim(anim);
+                                vibrator.cancel();
+                            }
+                        }
+                ).create();
+        arriving.show();
+    }
+
+    private void startVbrator() {
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+        VibrationEffect oneShot = null;
+            vibrator.vibrate(new long[]{2000, 1000, 2000, 2000, 2000, 3000,2000, 2000,2000,1000},-1);
+    }
+
     @Override
     public void onGetReverseGeoCodeResult(ReverseGeoCodeResult reverseGeoCodeResult) {
 
     }
 
     private class MyLocationListener extends BDAbstractLocationListener {
+
         @Override
         public void onReceiveLocation(BDLocation location) {
             curLocation = location;
@@ -273,6 +317,7 @@ public class MainActivity extends AppCompatActivity implements OnGetGeoCoderResu
             mBaiduMap.setMyLocationData(locData);
         }
     }
+
 
     @Override
     protected void onResume() {
