@@ -1,6 +1,6 @@
 #Arrcving Station
 
-#### bus and subway stop alert~
+#### bus and subway stop alert based on LBS.
 
 
 
