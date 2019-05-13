@@ -1,6 +1,6 @@
 #Arrcving Station
 
-#### bus and subway stop reminder~
+#### bus and subway stop alert~
 
 
 
